@@ -6,9 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,7 +27,7 @@ public class TaskController {
 
     @GetMapping("/tasks")
     public ResponseEntity<List<Task>> getAllTasks() {
-        log.info("Start TaskController.getAllTasks()" );
+        log.info("Start TaskController.getAllTasks()");
         return ResponseEntity.status(200).body(service.getAllTasks());
     }
 
@@ -44,4 +42,17 @@ public class TaskController {
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
+
+
+    @PostMapping("/tasks")
+    public ResponseEntity createTask( @RequestBody Task task){
+        log.info("Start TaskController.createTask()");
+
+        try {
+            return  ResponseEntity.status(200).body( service.createTask(task) );
+        } catch (IllegalArgumentException e) {
+           return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
 }

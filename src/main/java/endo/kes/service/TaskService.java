@@ -49,4 +49,26 @@ public class TaskService {
         }
         return db_Task.get(id);
     }
+
+    public Task createTask(Task taskOfClient) {
+        if( taskOfClient.id()!=null){
+            throw new IllegalArgumentException("Id should be empty");
+        }
+        if( taskOfClient.status()!=null){
+            throw new IllegalArgumentException("Status should be empty");
+        }
+
+        Task taskForCreate=new Task(
+                incrementTaskId++,
+                taskOfClient.creatorId(),
+                taskOfClient.assignedUserId(),
+                TaskStatus.CREATED,
+                taskOfClient.createDateTime(),
+                taskOfClient.deadlineDate(),
+                taskOfClient.priority()
+        );
+        db_Task.put(incrementHashMapKey++, taskForCreate);
+
+        return db_Task.get(incrementTaskId);
+    }
 }
