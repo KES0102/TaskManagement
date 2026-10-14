@@ -50,6 +50,7 @@ public class TaskService {
         return db_Task.get(id);
     }
 
+
     public Task createTask(Task taskOfClient) {
         if( taskOfClient.id()!=null){
             throw new IllegalArgumentException("Id should be empty");
@@ -70,5 +71,38 @@ public class TaskService {
         db_Task.put(incrementHashMapKey++, taskForCreate);
 
         return db_Task.get(incrementTaskId);
+    }
+
+
+    public void deleteTaskById(Long id) {
+        if(!db_Task.containsKey(id)) {
+            throw new EntityNotFoundException("Not found Task by id = "+id);
+        }
+        db_Task.remove(id);
+        return ;
+    }
+
+
+    public Task updateTaskById(Long id, Task taskOfClient) {
+        if( taskOfClient.status()==TaskStatus.DONE){
+            throw new IllegalArgumentException("Status cant be Done");
+        }
+        if(!db_Task.containsKey(id)) {
+            throw new IllegalArgumentException("Not found id= "+ id);
+        }
+        if(taskOfClient.status()!=db_Task.get(id).status()){
+            throw new IllegalArgumentException("Status cant be change");
+        }
+        Task taskForUpdate=new Task(
+                taskOfClient.id(),
+                taskOfClient.creatorId(),
+                taskOfClient.assignedUserId(),
+                taskOfClient.status(),
+                taskOfClient.createDateTime(),
+                taskOfClient.deadlineDate(),
+                taskOfClient.priority()
+        );
+        db_Task.put(id, taskForUpdate);
+        return db_Task.get(id);
     }
 }

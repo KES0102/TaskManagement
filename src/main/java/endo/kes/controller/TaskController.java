@@ -39,20 +39,44 @@ public class TaskController {
         try {
             return ResponseEntity.status(200).body(service.getTaskById(id));
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
+            return ResponseEntity.status(404).body(e.getMessage());
         }
     }
 
 
     @PostMapping("/tasks")
-    public ResponseEntity createTask( @RequestBody Task task){
+    public ResponseEntity createTask(@RequestBody Task task) {
         log.info("Start TaskController.createTask()");
 
         try {
-            return  ResponseEntity.status(200).body( service.createTask(task) );
+            service.createTask(task);
+            return ResponseEntity.status(201).body("Task created");
         } catch (IllegalArgumentException e) {
-           return ResponseEntity.status(403).body(e.getMessage());
+            return ResponseEntity.status(404).body(e.getMessage());
         }
     }
 
+
+    @DeleteMapping("/tasks/{id}")
+    public ResponseEntity<String> deleteTaskById(@PathVariable Long id) {
+        log.info("Start TaskController.deleteTaskById(): id={}", id);
+        try {
+            service.deleteTaskById(id);
+            return ResponseEntity.status(200).body("Task deleted");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/tasks/{id}")
+    public ResponseEntity<Task> updateTaskById(@PathVariable Long id, @RequestBody Task task) {
+        log.info("Start TaskController.updateTaskById(): id={}", id);
+
+        try {
+            Task taskUpdate = service.updateTaskById(id, task);
+            return ResponseEntity.status(200).body(taskUpdate);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).header("MyError", e.getMessage()).build();
+        }
+    }
 }
