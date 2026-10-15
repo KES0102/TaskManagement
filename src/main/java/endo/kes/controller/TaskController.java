@@ -79,4 +79,16 @@ public class TaskController {
             return ResponseEntity.status(404).header("MyError", e.getMessage()).build();
         }
     }
+
+    @PatchMapping("/task/backInProgress/{id}")
+    public ResponseEntity<Task> backStatusDone(@PathVariable Long id) {
+        log.info("Start TaskController.backStatusDone(): id={}", id);
+
+        try {
+            Task taskUpdate = service.backStatusDone(id);
+            return ResponseEntity.status(200).body(taskUpdate);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).header("MyError", e.getMessage()).build();
+        }
+    }
 }
