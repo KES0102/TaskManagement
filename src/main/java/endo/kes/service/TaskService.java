@@ -1,16 +1,13 @@
 package endo.kes.service;
 
-import endo.kes.Task;
-import endo.kes.TaskPriority;
-import endo.kes.TaskStatus;
-import endo.kes.controller.TaskController;
+import endo.kes.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -18,41 +15,38 @@ import java.util.List;
 public class TaskService {
 
     private final static Logger log = LoggerFactory.getLogger(TaskService.class);
-    public  HashMap<Long, Task> db_Task;
-    Long incrementHashMapKey, incrementTaskId;
+    TaskRepository db_task;
 
-    public TaskService() {
+    public TaskService(TaskRepository db_task) {
 
-        db_Task= new HashMap<>();
-        incrementHashMapKey=0L;
-        incrementTaskId=0L;
-
-        db_Task.put(incrementHashMapKey++, new Task(incrementTaskId++, 1L, 1L, TaskStatus.DONE, LocalDateTime.now(), LocalDateTime.parse("2026-10-15T08:00") , TaskPriority.Low) );
-        db_Task.put(incrementHashMapKey++, new Task(incrementTaskId++, 2L, 2L, TaskStatus.CREATED, LocalDateTime.now(), LocalDateTime.parse("2026-10-15T08:00") , TaskPriority.Medium) );
-        db_Task.put(incrementHashMapKey++, new Task(incrementTaskId++, 3L, 3L, TaskStatus.CREATED, LocalDateTime.now(), LocalDateTime.parse("2026-10-15T08:00") , TaskPriority.High) );
-        db_Task.put(incrementHashMapKey++, new Task(incrementTaskId++, 4L, 4L, TaskStatus.CREATED, LocalDateTime.now(), LocalDateTime.parse("2026-10-15T08:00") , TaskPriority.Low) );
-
+        this.db_task = db_task;
         log.info("End constructor TaskService" );
     }
 
 
     public List<Task> getAllTasks() {
-        log.info("Start TaskService.getAllTasks()" );
-        return new ArrayList<Task>(db_Task.values());
+        log.info("Start TaskService.getAllTasks()");
+
+        List<TaskEntity> allEntities = db_task.findAll();
+        return allEntities.stream().map( it->
+            toTaskOfTaskEntity(it)).toList();
+
     }
 
 
     public Task getTaskById(Long id) {
         log.info("Start TaskService.getTaskById(): id={}", id );
-        if(!db_Task.containsKey(id)) {
-            throw new EntityNotFoundException("Not found Task by id = "+id);
-        }
-        return db_Task.get(id);
+
+        TaskEntity taskEntity = db_task.findById(id).orElseThrow(()->new EntityNotFoundException("Task not found by id = "+id));
+
+        return toTaskOfTaskEntity(taskEntity);
     }
 
 
     public Task createTask(Task taskOfClient) {
+
         log.info("Start TaskService.createTask(): taskOfClient={}", taskOfClient );
+
         if( taskOfClient.id()!=null){
             throw new IllegalArgumentException("Id should be empty");
         }
@@ -60,46 +54,43 @@ public class TaskService {
             throw new IllegalArgumentException("Status should be empty");
         }
 
-        Task taskForCreate=new Task(
-                incrementTaskId++,
-                taskOfClient.creatorId(),
-                taskOfClient.assignedUserId(),
-                TaskStatus.CREATED,
-                taskOfClient.createDateTime(),
-                taskOfClient.deadlineDate(),
-                taskOfClient.priority()
-        );
-        db_Task.put(incrementHashMapKey++, taskForCreate);
+        TaskEntity taskEntity = new TaskEntity(taskOfClient.creatorId(), null, taskOfClient.assignedUserId(), TaskStatus.CREATED, taskOfClient.priority(), taskOfClient.deadlineDate(), taskOfClient.createDateTime());
 
-        log.info("End TaskService.createTask(): task={}", taskForCreate );
-
-        return db_Task.get(incrementTaskId);
+        return toTaskOfTaskEntity( db_task.save(taskEntity) );
     }
 
 
     public void deleteTaskById(Long id) {
+
         log.info("Start TaskService.deleteTaskById(): id={}", id );
-        if(!db_Task.containsKey(id)) {
-            throw new EntityNotFoundException("Not found Task by id = "+id);
+
+        if(db_task.existsById(id)){
+            db_task.deleteById(id);
+        }else{
+            throw new EntityNotFoundException("Task not found by id = " + id);
         }
-        db_Task.remove(id);
-        return ;
+
     }
 
 
     public Task updateTaskById(Long id, Task taskOfClient) {
+
         log.info("Start TaskService.updateTaskById(): id={}", id );
-        if( taskOfClient.status()==TaskStatus.DONE){
-            throw new IllegalArgumentException("Status cant be Done");
+
+        if( db_task.findById(id).get().getStatus()==TaskStatus.DONE){
+            throw new IllegalArgumentException("Task of status Done cannot be updated ");
         }
-        if(!db_Task.containsKey(id)) {
+
+        if(!db_task.existsById(id)) {
             throw new IllegalArgumentException("Not found id= "+ id);
         }
-        if(taskOfClient.status()!=db_Task.get(id).status()){
+
+        if(taskOfClient.status()!=  db_task.findById(id).get().getStatus() ){
             throw new IllegalArgumentException("Status cant be change");
         }
+
         Task taskForUpdate=new Task(
-                taskOfClient.id(),
+                id,
                 taskOfClient.creatorId(),
                 taskOfClient.assignedUserId(),
                 taskOfClient.status(),
@@ -107,21 +98,51 @@ public class TaskService {
                 taskOfClient.deadlineDate(),
                 taskOfClient.priority()
         );
-        db_Task.put(id, taskForUpdate);
+        db_task.save(toEntityOfTask(taskForUpdate));
+
         log.info("End TaskService.updateTaskById(): id={}", id );
-        return db_Task.get(id);
+
+        return toTaskOfTaskEntity(db_task.findById(id).get() );
     }
 
 
-    public Task backStatusDone(Long id) {
+    @Transactional
+    public void canselInProgressOfDone(Long id) {
         log.info("Start TaskService.backStatusDone(): id={}", id );
-        Task taskOld = db_Task.get(id);
-        if (taskOld.status() != TaskStatus.DONE) {
+
+        TaskEntity taskOld = db_task.findById(id).orElseThrow(()->new EntityNotFoundException("Task not found by id = "+ id));
+        log.info("TaskService.backStatusDone() find entity by id={}", id );
+
+        if (taskOld.getStatus() != TaskStatus.DONE) {
             throw new IllegalArgumentException("Task should be Done");
         }
-        Task taskForUpdate = new Task(taskOld.id(), taskOld.creatorId(), taskOld.assignedUserId(), TaskStatus.IN_PROGRESS, taskOld.createDateTime(), taskOld.deadlineDate(), taskOld.priority());
-        db_Task.put(id, taskForUpdate);
+
+        db_task.canselInProgressOfDone(id, TaskStatus.IN_PROGRESS);
+
         log.info("End TaskService.backStatusDone(): id={}", id );
-        return db_Task.get(id);
+    }
+
+    private Task toTaskOfTaskEntity(TaskEntity taskEntity){
+        return new Task(
+                taskEntity.getId(),
+                taskEntity.getCreatorId(),
+                taskEntity.getAssignedUserId(),
+                taskEntity.getStatus(),
+                taskEntity.getCreateDateTime(),
+                taskEntity.getDeadlineDate(),
+                taskEntity.getPriority()
+        );
+    }
+
+    private TaskEntity toEntityOfTask(Task task){
+        return new TaskEntity(
+                task.creatorId(),
+                task.id(),
+                task.assignedUserId(),
+                task.status(),
+                task.priority(),
+                task.deadlineDate(),
+                task.createDateTime()
+        );
     }
 }
