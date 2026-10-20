@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -117,9 +115,26 @@ public class TaskService {
             throw new IllegalArgumentException("Task should be Done");
         }
 
-        db_task.canselInProgressOfDone(id, TaskStatus.IN_PROGRESS);
+        db_task.setStatusById(id, TaskStatus.IN_PROGRESS);
 
         log.info("End TaskService.backStatusDone(): id={}", id );
+    }
+
+    @Transactional
+    public void taskStart(Long id) {
+
+        TaskEntity entity = db_task.findById(id).orElseThrow(() ->  new EntityNotFoundException("Not found id=" + id));
+
+        if( !(entity.getAssignedUserId()>0) ){
+            throw  new EntityNotFoundException("AssignedUserId is not number:" + entity.getAssignedUserId());
+        }
+
+        if( entity.getStatus()!=TaskStatus.CREATED ){
+            throw  new IllegalStateException("Status should be Create");
+        }
+
+        db_task.setStatusById(id, TaskStatus.IN_PROGRESS);
+
     }
 
     private Task toTaskOfTaskEntity(TaskEntity taskEntity){
@@ -134,6 +149,7 @@ public class TaskService {
         );
     }
 
+
     private TaskEntity toEntityOfTask(Task task){
         return new TaskEntity(
                 task.creatorId(),
@@ -145,4 +161,6 @@ public class TaskService {
                 task.createDateTime()
         );
     }
+
+
 }

@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import javax.xml.crypto.Data;
+import java.time.LocalDateTime;
+
 public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
 
     @Modifying
@@ -13,7 +16,9 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
             set r.status=:status
             where r.id = :id
             """)
-    void canselInProgressOfDone(
+    void setStatusById(
             @Param("id") Long id,
             @Param("status") TaskStatus status);
+
+
 }

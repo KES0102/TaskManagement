@@ -1,6 +1,7 @@
 package endo.kes.controller;
 
 import endo.kes.Task;
+import endo.kes.TaskEntity;
 import endo.kes.service.TaskService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -91,5 +92,26 @@ public class TaskController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).header("MyError", e.getMessage()).build();
         }
+    }
+
+
+    @PostMapping("tasks/{id}/start")
+    public ResponseEntity<Void> taskStart(@PathVariable Long id){
+        log.info("Start TaskController.taskStart(): id={}", id);
+
+        try {
+            service.taskStart(id);
+            log.info("Start TaskController.taskStart(): try");
+            return ResponseEntity.status(200).build();
+        } catch (EntityNotFoundException e) {
+            log.info("Start TaskController.taskStart(): catch_1");
+            return  ResponseEntity.status(404).header("myHeader", e.getMessage()).build();
+        }
+        catch (IllegalStateException e){
+            log.info("Start TaskController.taskStart(): catch_2");
+            return  ResponseEntity.status(404).header("myHeader", e.getMessage()).build();
+        }
+
+
     }
 }
