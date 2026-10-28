@@ -1,6 +1,7 @@
 package endo.kes.controller;
 
 import endo.kes.Task;
+import endo.kes.TaskEntity;
 import endo.kes.service.TaskService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -19,8 +20,6 @@ public class TaskController {
 
     public TaskController(TaskService service) {
         this.service = service;
-
-        System.out.println(service.db_Task);
 
     }
 
@@ -49,8 +48,8 @@ public class TaskController {
         log.info("Start TaskController.createTask()");
 
         try {
-            service.createTask(task);
-            return ResponseEntity.status(201).body("Task created");
+            Task createtask = service.createTask(task);
+            return ResponseEntity.status(201).body(createtask);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
@@ -58,15 +57,17 @@ public class TaskController {
 
 
     @DeleteMapping("/tasks/{id}")
-    public ResponseEntity<String> deleteTaskById(@PathVariable Long id) {
+    public ResponseEntity deleteTaskById(@PathVariable Long id) {
         log.info("Start TaskController.deleteTaskById(): id={}", id);
+
         try {
             service.deleteTaskById(id);
-            return ResponseEntity.status(200).body("Task deleted");
+            return ResponseEntity.status(200).body("Deleted Task successfully");
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
     }
+
 
     @PutMapping("/tasks/{id}")
     public ResponseEntity<Task> updateTaskById(@PathVariable Long id, @RequestBody Task task) {
@@ -80,15 +81,37 @@ public class TaskController {
         }
     }
 
+
     @PatchMapping("/task/backInProgress/{id}")
-    public ResponseEntity<Task> backStatusDone(@PathVariable Long id) {
+    public ResponseEntity<Void> backStatusDone(@PathVariable Long id) {
         log.info("Start TaskController.backStatusDone(): id={}", id);
 
         try {
-            Task taskUpdate = service.backStatusDone(id);
-            return ResponseEntity.status(200).body(taskUpdate);
-        } catch (IllegalArgumentException e) {
+            service.canselInProgressOfDone(id);
+            return ResponseEntity.status(200).build();
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).header("MyError", e.getMessage()).build();
         }
+    }
+
+
+    @PostMapping("tasks/{id}/start")
+    public ResponseEntity<Void> taskStart(@PathVariable Long id){
+        log.info("Start TaskController.taskStart(): id={}", id);
+
+        try {
+            service.taskStart(id);
+            log.info("Start TaskController.taskStart(): try");
+            return ResponseEntity.status(200).build();
+        } catch (EntityNotFoundException e) {
+            log.info("Start TaskController.taskStart(): catch_1");
+            return  ResponseEntity.status(404).header("myHeader", e.getMessage()).build();
+        }
+        catch (IllegalStateException e){
+            log.info("Start TaskController.taskStart(): catch_2");
+            return  ResponseEntity.status(404).header("myHeader", e.getMessage()).build();
+        }
+
+
     }
 }

@@ -1,15 +1,32 @@
 package endo.kes;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
+
 import java.time.LocalDateTime;
 
 public record Task(
-    Long id,
-    Long creatorId,       // id пользователя, создавшего задачу
-    Long assignedUserId,  // id исполнителя
-    TaskStatus status,
-    LocalDateTime createDateTime,
-    LocalDateTime deadlineDate ,
-    TaskPriority priority
+
+        @Null
+        Long id,
+
+        @NotNull
+        Long creatorId,
+
+        @NotNull
+        Long assignedUserId,
+
+
+        TaskStatus status,
+
+        @NotNull
+        LocalDateTime createDateTime,
+
+        @NotNull
+        LocalDateTime deadlineDate,
+
+
+        TaskPriority priority
 
 ) {
 }
