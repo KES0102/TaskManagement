@@ -52,7 +52,7 @@ public class TaskService {
             throw new IllegalArgumentException("Status should be empty");
         }
 
-        TaskEntity taskEntity = new TaskEntity(taskOfClient.creatorId(), null, taskOfClient.assignedUserId(), TaskStatus.CREATED, taskOfClient.priority(), taskOfClient.deadlineDate(), taskOfClient.createDateTime());
+        TaskEntity taskEntity = new TaskEntity(taskOfClient.creatorId(), null, taskOfClient.assignedUserId(), TaskStatus.CREATED, taskOfClient.priority(), taskOfClient.deadlineDate(), taskOfClient.createDateTime(),taskOfClient.doneDateTime());
 
         return toTaskOfTaskEntity( db_task.save(taskEntity) );
     }
@@ -94,7 +94,8 @@ public class TaskService {
                 taskOfClient.status(),
                 taskOfClient.createDateTime(),
                 taskOfClient.deadlineDate(),
-                taskOfClient.priority()
+                taskOfClient.priority(),
+                taskOfClient.doneDateTime()
         );
         db_task.save(toEntityOfTask(taskForUpdate));
 
@@ -126,7 +127,7 @@ public class TaskService {
         TaskEntity entity = db_task.findById(id).orElseThrow(() ->  new EntityNotFoundException("Not found id=" + id));
 
         if( !(entity.getAssignedUserId()>0) ){
-            throw  new EntityNotFoundException("AssignedUserId is not number:" + entity.getAssignedUserId());
+            throw  new IllegalArgumentException("AssignedUserId is not number:" + entity.getAssignedUserId());
         }
 
         if( entity.getStatus()!=TaskStatus.CREATED ){
@@ -137,6 +138,26 @@ public class TaskService {
 
     }
 
+    @Transactional
+    public void taskComplete(Long id) {
+
+        TaskEntity entity = db_task.findById(id).orElseThrow(() ->  new EntityNotFoundException("Not found id=" + id));
+
+        if( !(entity.getAssignedUserId()>0) ){
+            throw  new IllegalArgumentException("AssignedUserId is not number:" + entity.getAssignedUserId());
+        }
+
+        if( entity.getStatus()!=TaskStatus.IN_PROGRESS ){
+            throw  new IllegalStateException("Status should be IN_PROGRESS");
+        }
+        if( entity.getDeadlineDate()==null ){
+            throw  new IllegalArgumentException("DeadlineDate should be not null");
+        }
+
+        db_task.setStatusById(id, TaskStatus.DONE);
+    }
+
+
     private Task toTaskOfTaskEntity(TaskEntity taskEntity){
         return new Task(
                 taskEntity.getId(),
@@ -145,7 +166,8 @@ public class TaskService {
                 taskEntity.getStatus(),
                 taskEntity.getCreateDateTime(),
                 taskEntity.getDeadlineDate(),
-                taskEntity.getPriority()
+                taskEntity.getPriority(),
+                taskEntity.getDoneDateTime()
         );
     }
 
@@ -158,7 +180,9 @@ public class TaskService {
                 task.status(),
                 task.priority(),
                 task.deadlineDate(),
-                task.createDateTime()
+                task.createDateTime(),
+                task.doneDateTime()
+
         );
     }
 

@@ -1,5 +1,6 @@
 package endo.kes;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 
@@ -23,10 +24,14 @@ public record Task(
         LocalDateTime createDateTime,
 
         @NotNull
+        @Future
         LocalDateTime deadlineDate,
 
 
-        TaskPriority priority
+        @NotNull
+        TaskPriority priority,
+
+        LocalDateTime doneDateTime
 
 ) {
 }
