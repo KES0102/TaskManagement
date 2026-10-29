@@ -9,5 +9,6 @@ public class Main {
         SpringApplication.run(Main.class, args);
         System.out.println("test commit before merge");
         System.out.println("test commit 2 before merge");
+        System.out.println("test commit 3 before merge");
     }
 }
