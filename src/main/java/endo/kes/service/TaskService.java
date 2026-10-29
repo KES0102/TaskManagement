@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -155,6 +156,7 @@ public class TaskService {
         }
 
         db_task.setStatusById(id, TaskStatus.DONE);
+        db_task.setTimeDone(LocalDateTime.now(), id);
     }
 
 

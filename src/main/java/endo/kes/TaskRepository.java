@@ -21,4 +21,14 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
             @Param("status") TaskStatus status);
 
 
+    @Modifying
+    @Query("""
+            UPDATE TaskEntity r
+            set r.doneDateTime=:time
+            where r.id = :id
+    """)
+    void setTimeDone(
+            @Param("time") LocalDateTime time,
+            @Param("id")Long id
+    );
 }
