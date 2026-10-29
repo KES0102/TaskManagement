@@ -22,9 +22,6 @@ public class TaskEntity {
     @Column(name = "create_date_time", nullable = false)
     private LocalDateTime createDateTime;
 
-    @Column(name = "deadline_date", nullable = false)
-    private LocalDateTime deadlineDate;
-
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -35,17 +32,28 @@ public class TaskEntity {
     @Enumerated(EnumType.STRING)
     private TaskPriority priority;
 
+
+    @Column(name = "dead_line_date", nullable = false)
+    private LocalDateTime deadLineDate;
+
+
+
+    @Column(name = "done_date_time")
+    private LocalDateTime doneDateTime;
+
+
     public TaskEntity() {
     }
 
-    public TaskEntity(Long creatorId, Long id, Long assignedUserId, TaskStatus status, TaskPriority priority, LocalDateTime deadlineDate, LocalDateTime createDateTime) {
+    public TaskEntity(Long creatorId, Long id, Long assignedUserId, TaskStatus status, TaskPriority priority, LocalDateTime deadlineDate, LocalDateTime createDateTime, LocalDateTime doneDateTime) {
         this.id = id;
         this.creatorId = creatorId;
         this.assignedUserId = assignedUserId;
         this.createDateTime = createDateTime;
-        this.deadlineDate = deadlineDate;
         this.status = status;
         this.priority = priority;
+        this.deadLineDate = deadlineDate;
+        this.doneDateTime = doneDateTime;
     }
 
     public TaskPriority getPriority() {
@@ -53,7 +61,7 @@ public class TaskEntity {
     }
 
     public LocalDateTime getDeadlineDate() {
-        return deadlineDate;
+        return deadLineDate;
     }
 
     public LocalDateTime getCreateDateTime() {
@@ -76,6 +84,11 @@ public class TaskEntity {
         return id;
     }
 
+    public LocalDateTime getDoneDateTime() {
+        return doneDateTime;
+    }
+
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -97,7 +110,7 @@ public class TaskEntity {
     }
 
     public void setDeadlineDate(LocalDateTime deadlineDate) {
-        this.deadlineDate = deadlineDate;
+        this.deadLineDate = deadlineDate;
     }
 
     public void setPriority(TaskPriority priority) {
